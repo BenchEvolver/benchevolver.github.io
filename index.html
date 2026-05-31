@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BenchEvolver — Frontier Task Synthesis via Solution-Centric Evolution</title>
+<meta name="description" content="BenchEvolver evolves reference solutions to turn saturated coding benchmarks into harder, verifiable, frontier-level tasks — and reusable RL training signal. From UC Berkeley & Tsinghua IIIS.">
+<meta name="keywords" content="BenchEvolver, LiveCodeBench-Plus, benchmark saturation, LLM evaluation, code generation, self-improvement, reinforcement learning, synthetic data">
+
+<meta property="og:title" content="BenchEvolver: Frontier Task Synthesis via Solution-Centric Evolution">
+<meta property="og:description" content="Turn saturated coding benchmarks into frontier-level evaluation suites and reusable training signal — by evolving solutions, not statements.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://benchevolver.github.io/">
+<meta property="og:image" content="https://benchevolver.github.io/static/images/framework.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/css/style.css?v=4">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand"><span class="nav-logo">B</span> BenchEvolver</div>
+    <div class="nav-links">
+      <a href="#idea">Idea</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#benchmark">LCB-Plus</a>
+      <a href="#rl">Self-Improvement</a>
+      <a href="#cite">Cite</a>
+      <a href="https://github.com/thu-wyz/BenchEvolver" target="_blank">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <div class="wrap">
+    <h1>BenchEvolver: Frontier Task Synthesis<br>via <span class="accent">Solution-Centric Evolution</span></h1>
+    <div class="tagline">Evolve the solution first, then derive the statement and tests from executable semantics.</div>
+    <p class="lede">Frontier models now exceed <b>99% Pass@1</b> on LiveCodeBench easy, saturating our benchmarks. BenchEvolver automatically transforms existing coding problems into substantially harder, verified variants — tasks that are hard even for the model that created them.</p>
+
+    <div class="authors">
+      Yangzhen Wu<span class="sup">*1</span>,
+      Aaron J. Li<span class="sup">*1</span>,
+      Wenjie Ma<span class="sup">1</span>,
+      Li Cao<span class="sup">2</span>,
+      Ziheng Zhou<span class="sup">2</span>,
+      Mert Cemri<span class="sup">1</span>,
+      Shu Liu<span class="sup">1</span>,
+      Yuran Xiu<span class="sup">2</span>,
+      Chenxiao Yan<span class="sup">2</span>,
+      Haikun Zhao<span class="sup">2</span>,
+      Bin Yu<span class="sup">1</span>,
+      Ion Stoica<span class="sup">†1</span>,
+      Dawn Song<span class="sup">†1</span>
+    </div>
+    <div class="affil">¹ University of California, Berkeley &nbsp;·&nbsp; ² Institute for Interdisciplinary Information Sciences, Tsinghua University</div>
+    <div class="equal">* Equal contribution &nbsp;&nbsp;†&nbsp;Equal advising</div>
+
+    <div class="btn-row">
+      <a class="btn primary" href="https://arxiv.org/" target="_blank" id="paper-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Paper
+      </a>
+      <a class="btn" href="https://arxiv.org/" target="_blank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        arXiv
+      </a>
+      <a class="btn" href="https://github.com/thu-wyz/BenchEvolver" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.72-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05A9.39 9.39 0 0 1 12 6.84c.85 0 1.71.12 2.51.34 1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.04 10.04 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+        Code
+      </a>
+      <a class="btn" href="https://huggingface.co/BenchEvolver" target="_blank">🤗 Dataset</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ STAT BAND ============ -->
+<div class="statband">
+  <div class="stat-grid">
+    <div class="stat"><div class="num">91</div><div class="lbl">problems in<br><b>LiveCodeBench-Plus</b></div></div>
+    <div class="stat"><div class="num hot">−41.3 pts</div><div class="lbl">avg Pass@1 drop on<br>evolved Hard split</div></div>
+    <div class="stat"><div class="num">30</div><div class="lbl">algorithm categories<br>(up from 19 in seeds)</div></div>
+    <div class="stat"><div class="num">+8.7</div><div class="lbl">Pass@1 from<br>RL self-improvement</div></div>
+  </div>
+</div>
+
+<!-- ============ THE PROBLEM / IDEA ============ -->
+<section id="idea">
+  <div class="narrow">
+    <div class="eyebrow">The saturation problem</div>
+    <div class="callout">
+      <div class="big">Frontier models <b>solve almost everything</b>. Static benchmarks have stopped telling models apart — and stopped providing useful training signal.</div>
+      <p>On LiveCodeBench, state-of-the-art models exceed <b>99% Pass@1</b> on the newest easy split and over <b>90%</b> on average. Building new, sufficiently hard datasets by hand is slow and expensive — a bottleneck for continued progress.</p>
+    </div>
+
+    <div class="mt-l">
+      <h2 class="sec-title">The key inversion: <span class="accent">evolve the solution, not the statement</span></h2>
+      <p class="sec-sub">Most benchmark generation methods are problem-centric: they start by writing a new task and hope it requires new reasoning. In practice, this often produces surface-level variants of existing problems, while still relying on increasingly strong models to solve and validate them. BenchEvolver flips the direction. We evolve solutions first, then derive tasks from them. Because the reasoning structure changes before the problem statement is written, the resulting benchmarks impose genuinely new algorithmic demands while retaining executable ground truth by construction.</p>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="ico">🧬</div>
+        <h3>Generate in solution space</h3>
+        <p>Mutate the reference solution to force a <b class="accent">dominant algorithmic lift</b>, then derive the statement and tests around the evolved, executable solution.</p>
+      </div>
+      <div class="card">
+        <div class="ico">✓</div>
+        <h3>Verify by consistency</h3>
+        <p>Brute-force triangulation and statement-faithfulness checks ensure statement, solution, and tests define <b class="accent">the same task</b> — not a single LLM judge.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📉</div>
+        <h3>Select by real failure</h3>
+        <p>Difficulty is <b class="accent">measured</b>, not assigned: a candidate is accepted only if a panel of target models empirically fails more than on the seed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRANSFORM SHOWCASE ============ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="eyebrow">See it in action</div>
+    <h2 class="sec-title">One mutation, a whole new algorithm</h2>
+    <p class="sec-sub">The surface story stays familiar; the underlying computation jumps to a different regime. The same solution-centric principle works across two very different coding domains.</p>
+
+    <div class="domain-label">Example 1 — Competitive programming &nbsp;<span>LiveCodeBench</span></div>
+    <div class="transform">
+      <div class="tcol seed">
+        <span class="tag">Seed · Pass@1 8/8</span>
+        <h4>Copy Arrays</h4>
+        <p>Count arrays whose <b>adjacent differences</b> match the original and whose entries satisfy per-index bounds.</p>
+        <span class="codeblk"><span class="cm">one unknown:</span>  copy[i] = original[i] <span class="op">+</span> d
+<span class="cm">bounds:     </span>  u_i <span class="op">≤</span> copy[i] <span class="op">≤</span> v_i
+<span class="cm">solve:      </span>  intersect intervals for d  <span class="op">→</span>  O(N)</span>
+      </div>
+      <div class="tarrow">
+        <div class="ico">→</div>
+        <div class="lbl">ALGORITHMIC LIFT</div>
+      </div>
+      <div class="tcol evo">
+        <span class="tag">Evolved · Pass@1 4/8</span>
+        <h4>XOR-Linked Sequence</h4>
+        <p>Now adjacent <b>XORs</b> must match. The feasible sets are <b>no longer contiguous</b> — interval intersection fails.</p>
+        <span class="codeblk"><span class="cm">one unknown:</span>  copy[i] = x <span class="op">XOR</span> p_i
+<span class="cm">bounds:     </span>  u_i <span class="op">≤</span> x <span class="op">XOR</span> p_i <span class="op">≤</span> v_i
+<span class="cm">solve:      </span>  XOR sets non-contiguous  <span class="op">→</span>  digit-DP, O(N·bits)</span>
+      </div>
+    </div>
+    <div class="lift-note">
+      <b>Why it is harder:</b> the seed is solved by an O(N) interval intersection over one free variable. Switching addition to XOR makes the constraints u<sub>i</sub> ≤ x ⊕ p<sub>i</sub> ≤ v<sub>i</sub>, whose solution sets are non-contiguous — requiring a bitwise digit-DP or trie. The parent's shortcut is provably insufficient.
+    </div>
+
+    <div class="domain-label mt-l">Example 2 — Scientific coding &nbsp;<span>SciCode</span></div>
+    <div class="transform">
+      <div class="tcol seed">
+        <span class="tag">Seed · forward simulation</span>
+        <h4>RK4 Integrator</h4>
+        <p>Implement a classical fourth-order Runge–Kutta integrator for a driven damped pendulum, returning the full state-space trajectory.</p>
+        <span class="codeblk"><span class="cm"># given f, state, dt, n ...</span>
+runge_kutta_4th_order(...)
+<span class="cm"># integrate forward → trajectory</span></span>
+      </div>
+      <div class="tarrow">
+        <div class="ico">→</div>
+        <div class="lbl">ALGORITHMIC LIFT</div>
+      </div>
+      <div class="tcol evo">
+        <span class="tag">Evolved · inverse problem</span>
+        <h4>Fit ODE Trajectory (Gauss–Newton)</h4>
+        <p>Estimate the <b>unknown initial state and ODE parameters</b> from sparse observations — turning integration into a full nonlinear solver.</p>
+        <span class="codeblk"><span class="cm"># RK4 forward sim, then:</span>
+damped Gauss<span class="op">-</span>Newton
+<span class="op">+</span> finite<span class="op">-</span>diff Jacobian
+<span class="op">+</span> backtracking line search</span>
+      </div>
+    </div>
+    <div class="lift-note">
+      <b>Why it is harder:</b> the seed performs a single <i>forward</i> simulation of a known ODE. The evolved task inverts it — recovering unknown initial conditions and parameters from noisy, sparsely sampled observations. This requires repeated RK4 simulation inside a damped Gauss–Newton loop with finite-difference Jacobians and a backtracking line search, a qualitatively harder numerical-optimization pipeline.
+    </div>
+  </div>
+</section>
+
+<!-- ============ METHOD ============ -->
+<section id="method">
+  <div class="wrap">
+    <div class="eyebrow">The framework</div>
+    <h2 class="sec-title">A closed loop: Proposer → Evaluator → Memory</h2>
+    <p class="sec-sub">A Proposer evolves solutions and writes tasks; an Evaluator validates and measures empirical difficulty; a Memory module feeds accepted lineages and past failures back into search — turning repeated sampling into adaptive evolution.</p>
+
+    <figure class="fig">
+      <img src="static/images/framework.png?v=2" alt="BenchEvolver framework overview">
+      <figcaption><b>Overview of BenchEvolver.</b> A saturated seed task is mutated in solution space; the evaluator filters candidates for validity, diversity, and difficulty; memory records outcomes with reasons; accepted candidates become new parents.</figcaption>
+    </figure>
+
+    <div class="grid-3 mt-l">
+      <div class="card">
+        <div class="ico">🛠️</div>
+        <h3>Proposer</h3>
+        <p>Mutates the parent solution into a structurally different one, then derives a natural statement, public examples, and tiered hidden tests — all anchored by <b>executing</b> the evolved reference.</p>
+      </div>
+      <div class="card">
+        <div class="ico">⚖️</div>
+        <h3>Evaluator</h3>
+        <p>Triangulates the reference, a brute-force solver, and a statement-only oracle to catch inconsistencies; runs bounded repair; then accepts only if the target panel empirically fails more.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧠</div>
+        <h3>Memory</h3>
+        <p><b>Local</b> memory tracks each seed's lineage and error patterns; <b>global</b> memory enforces diversity across seeds — a family that already succeeded must clear a higher difficulty bar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTS: difficulty ============ -->
+<section id="results" class="alt">
+  <div class="wrap">
+    <div class="eyebrow">Result 1 · Empirically harder</div>
+    <h2 class="sec-title">Evolved tasks cut pass rates — even for their own generator</h2>
+    <p class="sec-sub">Across two domains, four target models, and multiple evolvers, evolved problems consistently and substantially reduce Pass@1 relative to their seeds. Crucially, each evolver also drops on its own evolved tasks — this is self-challenging generation, not teacher-to-student distillation.</p>
+
+    <figure class="fig">
+      <img src="static/images/lcb_difficulty.png" alt="LiveCodeBench seed vs evolved Pass@1">
+      <figcaption><b>LiveCodeBench.</b> Pass@1 on original seeds vs. evolved problems across evolver models (columns) and target models (rows). Evolved tasks reduce pass rates everywhere (k = 4 attempts/model).</figcaption>
+    </figure>
+
+    <figure class="fig mt-m">
+      <img src="static/images/scicode_difficulty.png" alt="SciCode seed vs evolved Pass@1">
+      <figcaption><b>SciCode.</b> The same solution-centric principle extends beyond competitive programming to research-style scientific coding, with high validity and large difficulty gains.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ HUMAN EVAL ============ -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow">Result 2 · Human-verified quality</div>
+    <h2 class="sec-title">Harder and more diverse — without losing clarity</h2>
+    <p class="sec-sub">Six competitive-programming experts (Codeforces master / IOI / ICPC level) blindly reviewed 207 evolved problems across 72 seeds. Evolved tasks are rated more novel and far more difficult, span a much broader algorithmic surface — and are actually rated <i>clearer</i> than their seeds.</p>
+
+    <div class="grid-2">
+      <figure class="fig">
+        <img src="static/images/human_cnd.png" alt="Clarity, novelty, difficulty distributions">
+        <figcaption><b>Clarity · Novelty · Difficulty.</b> Evolved problems shift toward higher novelty and difficulty while keeping clarity high.</figcaption>
+      </figure>
+      <figure class="fig">
+        <img src="static/images/algo_shift.png" alt="Algorithm category shift seed to evolved">
+        <figcaption><b>Algorithmic surface area.</b> Seeds are dominated by search/simulation; evolved tasks spread mass across segment trees, HLD/LCT, AC automata, polynomial methods, and more.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LCB-PLUS BENCHMARK ============ -->
+<section id="benchmark" class="alt">
+  <div class="wrap">
+    <div class="eyebrow">The artifact</div>
+    <h2 class="sec-title">LiveCodeBench-Plus</h2>
+    <p class="sec-sub">A 91-problem benchmark combining 64 human-vetted evolved tasks with 27 difficult original LCB-v6 problems. Every problem passes correctness, quality (≥3/5, Olympiad standard), and difficulty-range gates. Frontier Pass@1 spans 27.5%–62.6% — restoring clear discrimination among the strongest models.</p>
+
+    <div class="card">
+      <h3 style="margin-bottom:18px; font-size:17px;">Pass@1 on LiveCodeBench-Plus <span style="color:var(--faint);font-weight:400;font-size:14px;">(91 problems · k=4)</span></h3>
+      <div class="lb">
+        <div class="lb-row"><div class="lb-name">GPT-5.5<span class="prov">OpenAI</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:62.6%"></div></div><div class="lb-val">62.6</div></div>
+        <div class="lb-row"><div class="lb-name">Gemini-3.1-Pro<span class="prov">Google</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:59.1%"></div></div><div class="lb-val">59.1</div></div>
+        <div class="lb-row"><div class="lb-name">GPT-5.4<span class="prov">OpenAI</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:54.1%"></div></div><div class="lb-val">54.1</div></div>
+        <div class="lb-row"><div class="lb-name">Gemini-3.5-Flash<span class="prov">Google</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:50.0%"></div></div><div class="lb-val">50.0</div></div>
+        <div class="lb-row"><div class="lb-name">Qwen-3.7-Max<span class="prov">Alibaba</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:47.5%"></div></div><div class="lb-val">47.5</div></div>
+        <div class="lb-row"><div class="lb-name">Gemini-3-Flash<span class="prov">Google</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:40.1%"></div></div><div class="lb-val">40.1</div></div>
+        <div class="lb-row"><div class="lb-name">GPT-5.4-mini<span class="prov">OpenAI</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:29.6%"></div></div><div class="lb-val">29.6</div></div>
+        <div class="lb-row"><div class="lb-name">DeepSeek-V4-Pro<span class="prov">DeepSeek</span></div><div class="lb-bar-track"><div class="lb-bar" style="width:27.5%"></div></div><div class="lb-val">27.5</div></div>
+      </div>
+      <p style="color:var(--faint);font-size:12.5px;margin-top:14px;">Reasoning settings: GPT models use <b>medium</b> reasoning effort, DeepSeek uses <b>high</b>, and Gemini models use <b>adaptive</b> reasoning.</p>
+    </div>
+
+    <div class="mt-l">
+      <h3 style="margin-bottom:16px; font-size:17px;">Difficulty shift: seed → evolved (Pass@1 %)</h3>
+      <div class="tbl-wrap">
+        <table class="data">
+          <thead><tr><th>Model</th><th>Medium seed</th><th>Medium evolved</th><th>Hard seed</th><th>Hard evolved</th><th>Δ Hard</th></tr></thead>
+          <tbody>
+            <tr><td>GPT-5.5</td><td class="seedv">100.0</td><td class="evov">80.0</td><td class="seedv">97.1</td><td class="evov">62.3</td><td class="drop">−34.8</td></tr>
+            <tr><td>GPT-5.4</td><td class="seedv">98.9</td><td class="evov">74.3</td><td class="seedv">94.8</td><td class="evov">49.7</td><td class="drop">−45.1</td></tr>
+            <tr><td>GPT-5.4-mini</td><td class="seedv">95.7</td><td class="evov">59.3</td><td class="seedv">79.7</td><td class="evov">21.7</td><td class="drop">−58.0</td></tr>
+            <tr><td>Gemini-3.1-Pro</td><td class="seedv">100.0</td><td class="evov">78.6</td><td class="seedv">96.5</td><td class="evov">56.8</td><td class="drop">−39.7</td></tr>
+            <tr><td>DeepSeek-V4-Pro</td><td class="seedv">95.7</td><td class="evov">57.1</td><td class="seedv">83.7</td><td class="evov">23.2</td><td class="drop">−60.5</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--faint);font-size:13.5px;margin-top:12px;">Averaged across all evaluated models, the Hard split drops from 87.0% → 45.7% Pass@1 — an absolute reduction of 41.3 points.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RL SELF-IMPROVEMENT ============ -->
+<section id="rl">
+  <div class="wrap">
+    <div class="eyebrow">Result 3 · Closing the loop</div>
+    <h2 class="sec-title">Self-generated challenges become training signal</h2>
+    <p class="sec-sub">Using gpt-oss-20b as both evolver and target, we evolve problems it already solves into harder verified variants, then train on them with RL. Evolved tasks improve held-out coding performance <b>beyond training on the original seeds alone</b> — the same model exposes and then learns from its own weaknesses.</p>
+
+    <div class="grid-3">
+      <figure class="fig">
+        <img src="static/images/rl_hard.png" alt="RL gains on LCB v6 Hard">
+        <figcaption><b>LCB v6 Hard</b> — +8.7 with seed+evolved</figcaption>
+      </figure>
+      <figure class="fig">
+        <img src="static/images/rl_easy.png" alt="RL gains on LCB-Pro Easy">
+        <figcaption><b>LCB-Pro Easy</b> — +8.3 with seed+evolved</figcaption>
+      </figure>
+      <figure class="fig">
+        <img src="static/images/rl_medium.png" alt="RL gains on LCB-Evolved Medium">
+        <figcaption><b>LCB-Evolved Medium</b> — +7.8 with evolved-only</figcaption>
+      </figure>
+    </div>
+
+    <div class="quote mt-l narrow">
+      Evolved tasks are not only harder benchmark items — they are <span class="accent">reusable training environments</span> that help a model improve on difficult coding regimes beyond its saturated training distribution.
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY IT MATTERS ============ -->
+<section class="alt">
+  <div class="narrow">
+    <div class="eyebrow">The bigger picture</div>
+    <h2 class="sec-title">Toward living benchmarks</h2>
+    <p class="sec-sub">Any fixed benchmark eventually saturates. BenchEvolver points to a different model of evaluation: a reproducible pipeline that periodically generates, validates, and calibrates new tasks against current frontier models — aligning evaluation with training, so the same verified tasks that reveal failures also become the environments that fix them.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>🔁 Self-challenging, no stronger teacher</h3>
+        <p>Difficulty is measured by executable model failure — including the generator's own. Frontier models can expose and train on their own weaknesses, not just distill from a larger model.</p>
+      </div>
+      <div class="card">
+        <h3>🌐 Domain-general by design</h3>
+        <p>Only the execution harness is domain-specific. The same mutate → write → verify → select loop works on stdin/stdout competitive programming and assertion-based scientific coding alike.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CITE ============ -->
+<section id="cite">
+  <div class="narrow">
+    <div class="eyebrow">Citation</div>
+    <h2 class="sec-title">Cite BenchEvolver</h2>
+    <p class="sec-sub">If you find our work useful, please consider citing:</p>
+    <div class="bibtex" id="bibtex"><button class="copy-btn" onclick="copyBib()">Copy</button>@article{wu2026benchevolver,
+  title   = {BenchEvolver: Frontier Task Synthesis via Solution-Centric Evolution},
+  author  = {Wu, Yangzhen and Li, Aaron J. and Ma, Wenjie and Cao, Li and
+             Zhou, Ziheng and Cemri, Mert and Liu, Shu and Xiu, Yuran and
+             Yan, Chenxiao and Zhao, Haikun and Yu, Bin and Stoica, Ion and Song, Dawn},
+  journal = {arXiv preprint},
+  year    = {2026},
+  url     = {https://benchevolver.github.io/}
+}</div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="ft-links">
+    <a href="https://github.com/thu-wyz/BenchEvolver" target="_blank">GitHub</a>
+    <a href="https://huggingface.co/BenchEvolver" target="_blank">Hugging Face</a>
+    <a href="mailto:yangzhen_wu@berkeley.edu">Contact</a>
+  </div>
+  <div>BenchEvolver · UC Berkeley &amp; Tsinghua IIIS · 2026</div>
+</footer>
+
+<script src="static/js/main.js?v=4"></script>
+</body>
+</html>
